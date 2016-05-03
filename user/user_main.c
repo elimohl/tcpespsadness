@@ -102,7 +102,6 @@ void wifi_handle_event_cb(System_Event_t *evt)
             printf("\n");
             GPIO_OUTPUT_SET(2, 1);
             tcp_send();
-
             break;
         default:
             break;
@@ -119,18 +118,26 @@ void wifi_handle_event_cb(System_Event_t *evt)
 void user_init(void)
 {
     uart_div_modify(UART0, UART_CLK_FREQ / (BIT_RATE_38400));
-    //gdbstub_init();
-    GPIO_OUTPUT_SET(2, 0);
-    printf("\nSDK version:%s\n", system_get_sdk_version());
-    wifi_set_event_handler_cb(wifi_handle_event_cb);
-    wifi_set_opmode(STATION_MODE);
 
+    wifi_set_opmode(STATION_MODE);
     struct station_config* config = (struct station_config *)zalloc(sizeof(struct
         station_config));
-        sprintf(config->ssid, AP_SSID);
-        sprintf(config->password, AP_PASSWORD);
-        wifi_station_set_config(config);
-        free(config);
-    wifi_station_connect();
+    sprintf(config->ssid, AP_SSID);
+    sprintf(config->password, AP_PASSWORD);
+    wifi_station_set_config(config);
+    free(config);
+
+    wifi_station_dhcpc_stop();
+    struct ip_info info;
+    IP4_ADDR(&info.ip, 192, 168, 1, 116);
+    IP4_ADDR(&info.gw, 192, 168, 1, 1);
+    IP4_ADDR(&info.netmask, 255, 255, 255, 0);
+    wifi_set_ip_info(STATION_IF, &info);
+
+    wifi_set_event_handler_cb(wifi_handle_event_cb);
+
+    GPIO_OUTPUT_SET(2, 0);
+    printf("\nSDK version:%s\n", system_get_sdk_version());
+
 }
 
